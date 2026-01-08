@@ -26,13 +26,6 @@ Voice Notes is a digital journal mobile application built with **React Native**.
 * 📶 **Offline Support** (no internet required)
 * 🔐 **Permissions Handling** for microphone and storage
 
-### Optional / Advanced
-
-* ☁️ Backup & Restore (optional extension)
-* ⚙️ Settings (recording quality, playback speed – optional)
-
----
-
 ## 🧠 Concepts Covered
 
 * React Native UI Components
