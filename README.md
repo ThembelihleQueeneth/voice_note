@@ -1,50 +1,93 @@
-# Welcome to your Expo app 👋
+# 🎙️ Voice Notes – Audio Recording App (React Native)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+![voice_notes](https://github.com/user-attachments/assets/2e704892-db30-4560-b277-011378d9bd99)
 
-## Get started
+## 📱 Overview
 
-1. Install dependencies
+Voice Notes is a digital journal mobile application built with **React Native**. It allows users to record, play back, search, rename, and delete voice notes. The app works offline and stores audio persistently on the device.
 
-   ```bash
-   npm install
-   ```
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## ✨ Features
 
-In the output, you'll find options to open the app in a
+### Core (CRUD)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+* 🎤 **Record Audio Notes** using the device microphone
+* 📂 **List Saved Recordings** with date, time, and duration
+* ▶️ **Playback Audio** with play / pause controls
+* 🗑️ **Delete Recordings**
+* ✏️ **Rename Audio Notes**
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Additional Functionality
 
-## Get a fresh project
+* 🔍 **Search Voice Notes by Name**
+* 💾 **Persistent Storage** (audio remains after app restart)
+* 📶 **Offline Support** (no internet required)
+* 🔐 **Permissions Handling** for microphone and storage
 
-When you're ready, run:
+### Optional / Advanced
+
+* ☁️ Backup & Restore (optional extension)
+* ⚙️ Settings (recording quality, playback speed – optional)
+
+---
+
+## 🧠 Concepts Covered
+
+* React Native UI Components
+* Capturing User Interactions
+* Audio Recording & Playback
+* File System Management
+* Permissions Handling
+* State Management
+
+---
+
+## 🛠️ Tech Stack
+
+* **React Native**
+* **Expo**
+* `expo-av` – audio recording & playback
+* `expo-file-system` – file storage
+* `expo-permissions`
+
+---
+
+## 🚀 Installation & Running the App
 
 ```bash
-npm run reset-project
+npm install
+expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+* Run on Android Emulator, iOS Simulator, or physical device using Expo Go
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 📸 Screenshot
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+The screenshot above shows:
 
-## Join the community
+* Gradient background UI
+* Voice recordings list
+* Search functionality
+* Floating microphone button for recording
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## ✅ Evaluation Checklist
+
+* ✔️ Audio can be recorded
+* ✔️ Audio can be played with duration displayed
+* ✔️ User can control playback (play / pause)
+* ✔️ Audio persists after app restart
+* ✔️ Audio can be renamed
+* ✔️ Audio is searchable by name
+
+---
+
+## 👩‍💻 Author
+
+**Thembelihle Maluka**
+React Native Learner | Audio Journal App Project
