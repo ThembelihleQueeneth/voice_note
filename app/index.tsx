@@ -40,7 +40,11 @@ export default function Index() {
       : undefined;
   }, [sound]);
 
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+
   const startRecording = async () => {
+    if (isProcessingAudio) return;
+    setIsProcessingAudio(true);
     try {
       if (permissionResponse?.status !== 'granted') {
         const response = await requestPermission();
@@ -73,33 +77,46 @@ export default function Index() {
       ).start();
     } catch (err) {
       console.error('Failed to start recording', err);
+    } finally {
+      setIsProcessingAudio(false);
     }
   };
 
   const stopRecording = async () => {
-    if (!recording) return;
+    if (!recording || isProcessingAudio) return;
+    setIsProcessingAudio(true);
 
-    await recording.stopAndUnloadAsync();
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-    });
+    try {
+      await recording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+      });
 
-    setRecording(null);
+      setRecording(null);
 
-    pulseAnim.stopAnimation();
-    pulseAnim.setValue(1);
+      pulseAnim.stopAnimation();
+      pulseAnim.setValue(1);
 
-    const uri = recording.getURI();
-    if (uri) {
-      const newNote: AudioNote = {
-        id: Date.now().toString(),
-        title: `Recording ${notes.length + 1}`,
-        duration: "00:00",
-        date: "Just now",
-        isPlaying: false,
-        uri: uri,
-      };
-      setNotes([newNote, ...notes]);
+      const uri = recording.getURI();
+      if (uri) {
+        const newNote: AudioNote = {
+          id: Date.now().toString(),
+          title: `Recording ${notes.length + 1}`,
+          duration: "00:00",
+          date: "Just now",
+          isPlaying: false,
+          uri: uri,
+        };
+        setNotes([newNote, ...notes]);
+      }
+    } catch (err) {
+      console.error('Failed to stop recording cleanly', err);
+      // Clean up the UI state even if the stopping failed natively.
+      setRecording(null);
+      pulseAnim.stopAnimation();
+      pulseAnim.setValue(1);
+    } finally {
+      setIsProcessingAudio(false);
     }
   };
 
