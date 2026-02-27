@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Audio } from "expo-av";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
@@ -40,6 +41,33 @@ export default function Index() {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [permissionResponse, requestPermission] = Audio.usePermissions();
+
+  // Load persisted notes on initial render
+  useEffect(() => {
+    const loadNotes = async () => {
+      try {
+        const storedNotes = await AsyncStorage.getItem('@voice_notes');
+        if (storedNotes !== null) {
+          setNotes(JSON.parse(storedNotes));
+        }
+      } catch (e) {
+        console.error('Failed to load notes', e);
+      }
+    };
+    loadNotes();
+  }, []);
+
+  // Save notes whenever they change
+  useEffect(() => {
+    const saveNotes = async () => {
+      try {
+        await AsyncStorage.setItem('@voice_notes', JSON.stringify(notes));
+      } catch (e) {
+        console.error('Failed to save notes', e);
+      }
+    };
+    saveNotes();
+  }, [notes]);
 
   useEffect(() => {
     return sound
