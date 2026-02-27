@@ -1,15 +1,16 @@
+import { Ionicons } from "@expo/vector-icons";
+import { Audio } from "expo-av";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useRef, useState } from "react";
 import {
-  View,
+  Animated,
+  FlatList,
+  StyleSheet,
   Text,
   TextInput,
-  StyleSheet,
   TouchableOpacity,
-  FlatList,
-  Animated,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-import { useState, useRef } from "react";
 import AudioCard from "./components/AudioCard";
 import RecordButton from "./components/RecordButton";
 import { AudioNote } from "./types/audioNote";
@@ -27,30 +28,130 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
   const [notes, setNotes] = useState<AudioNote[]>(audioNotes);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [permissionResponse, requestPermission] = Audio.usePermissions();
 
-  const startPulse = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.2,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
+  useEffect(() => {
+    return sound
+      ? () => {
+        sound.unloadAsync();
+      }
+      : undefined;
+  }, [sound]);
+
+  const startRecording = async () => {
+    try {
+      if (permissionResponse?.status !== 'granted') {
+        const response = await requestPermission();
+        if (response.status !== 'granted') return;
+      }
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      setRecording(recording);
+
+      pulseAnim.setValue(1);
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.2,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
   };
 
-  const togglePlay = (id: string) => {
-    setNotes(notes.map(note => 
-      note.id === id 
-        ? { ...note, isPlaying: !note.isPlaying }
-        : { ...note, isPlaying: false }
-    ));
+  const stopRecording = async () => {
+    if (!recording) return;
+
+    await recording.stopAndUnloadAsync();
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+    });
+
+    setRecording(null);
+
+    pulseAnim.stopAnimation();
+    pulseAnim.setValue(1);
+
+    const uri = recording.getURI();
+    if (uri) {
+      const newNote: AudioNote = {
+        id: Date.now().toString(),
+        title: `Recording ${notes.length + 1}`,
+        duration: "00:00",
+        date: "Just now",
+        isPlaying: false,
+        uri: uri,
+      };
+      setNotes([newNote, ...notes]);
+    }
+  };
+
+  const handleRecordPress = () => {
+    if (recording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const togglePlay = async (id: string) => {
+    const note = notes.find(n => n.id === id);
+    if (!note) return;
+
+    if (sound) {
+      await sound.unloadAsync();
+      setSound(null);
+    }
+
+    if (note.isPlaying) {
+      setNotes(notes.map(n => ({ ...n, isPlaying: false })));
+      return;
+    }
+
+    if (note.uri) {
+      try {
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          { uri: note.uri },
+          { shouldPlay: true }
+        );
+        setSound(newSound);
+
+        setNotes(notes.map(n =>
+          n.id === id ? { ...n, isPlaying: true } : { ...n, isPlaying: false }
+        ));
+
+        newSound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            setNotes(prevNotes => prevNotes.map(n =>
+              n.id === id ? { ...n, isPlaying: false } : n
+            ));
+          }
+        });
+      } catch (error) {
+        console.error("Error playing sound", error);
+      }
+    } else {
+      setNotes(notes.map(n =>
+        n.id === id ? { ...n, isPlaying: true } : { ...n, isPlaying: false }
+      ));
+    }
   };
 
   const handleMenuPress = (noteId: string) => {
@@ -75,7 +176,7 @@ export default function Index() {
             <Text style={styles.greeting}>Hello, Be patient with yourself</Text>
             <Text style={styles.title}>Voice Notes</Text>
           </View>
-          
+
         </View>
 
         {/* Stats */}
@@ -123,7 +224,8 @@ export default function Index() {
 
         {/* Record Button with Animation */}
         <RecordButton
-          onPress={startPulse}
+          onPress={handleRecordPress}
+          isRecording={!!recording}
           pulseAnim={pulseAnim}
         />
       </LinearGradient>

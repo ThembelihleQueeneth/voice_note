@@ -1,21 +1,22 @@
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from 'react';
 import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
   Animated,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { RecordButtonProps } from "../types/audioNote";
 
-const RecordButton: React.FC<RecordButtonProps> = ({ 
-  onPress, 
-  pulseAnim 
+const RecordButton: React.FC<RecordButtonProps> = ({
+  onPress,
+  isRecording,
+  pulseAnim
 }) => {
   return (
     <View style={styles.recordWrapper}>
-      {pulseAnim && (
+      {isRecording && pulseAnim && (
         <Animated.View
           style={[
             styles.recordPulse,
@@ -38,10 +39,10 @@ const RecordButton: React.FC<RecordButtonProps> = ({
           colors={["#FF3B30", "#FF6B6B"]}
           style={styles.recordGradient}
         >
-          <Ionicons name="mic" size={28} color="#fff" />
+          <Ionicons name={isRecording ? "stop" : "mic"} size={28} color="#fff" />
         </LinearGradient>
       </TouchableOpacity>
-      
+
       {/* Quick Actions */}
       <View style={styles.quickActions}>
         <TouchableOpacity style={styles.quickAction}>

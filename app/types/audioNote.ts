@@ -4,6 +4,7 @@ export interface AudioNote {
   duration: string;
   date: string;
   isPlaying: boolean;
+  uri?: string;
 }
 
 export interface AudioCardProps {
@@ -14,6 +15,6 @@ export interface AudioCardProps {
 
 export interface RecordButtonProps {
   onPress: () => void;
-  isPulsing?: boolean;
+  isRecording: boolean;
   pulseAnim?: any; // You can use Animated.Value for better typing
 }
