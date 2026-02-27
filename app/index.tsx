@@ -18,6 +18,21 @@ import RecordButton from "./components/RecordButton";
 import RenameNoteModal from "./components/RenameNoteModal";
 import { AudioNote } from "./types/audioNote";
 
+const formatDuration = (millis: number) => {
+  const minutes = Math.floor(millis / 60000);
+  const seconds = Math.floor((millis % 60000) / 1000);
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const formatDate = (date: Date) => {
+  const options: Intl.DateTimeFormatOptions = {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  };
+  return date.toLocaleDateString('en-US', options);
+};
+
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
   const [notes, setNotes] = useState<AudioNote[]>([]);
@@ -92,12 +107,18 @@ export default function Index() {
       pulseAnim.setValue(1);
 
       const uri = recording.getURI();
+
+      const status = await recording.getStatusAsync();
+      const durationMillis = status.durationMillis || 0;
+      const formattedDuration = formatDuration(durationMillis);
+      const formattedDate = formatDate(new Date());
+
       if (uri) {
         const newNote: AudioNote = {
           id: Date.now().toString(),
           title: `Recording ${notes.length + 1}`,
-          duration: "00:00",
-          date: "Just now",
+          duration: formattedDuration,
+          date: formattedDate,
           isPlaying: false,
           uri: uri,
         };
