@@ -59,6 +59,22 @@ export default function Index() {
         const response = await requestPermission();
         if (response.status !== 'granted') return;
       }
+
+      // Play start sound (short ascending beep)
+      try {
+        const { sound: startSound } = await Audio.Sound.createAsync(
+          require('./assets/sounds/record-start.mp3')
+        );
+        await startSound.playAsync();
+        startSound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            startSound.unloadAsync();
+          }
+        });
+      } catch (e) {
+        console.warn("Could not play start sound", e);
+      }
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
@@ -100,6 +116,21 @@ export default function Index() {
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
       });
+
+      // Play stop sound (short descending beep)
+      try {
+        const { sound: stopSound } = await Audio.Sound.createAsync(
+          require('./assets/sounds/record-stop.mp3')
+        );
+        await stopSound.playAsync();
+        stopSound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            stopSound.unloadAsync();
+          }
+        });
+      } catch (e) {
+        console.warn("Could not play stop sound", e);
+      }
 
       setRecording(null);
 
