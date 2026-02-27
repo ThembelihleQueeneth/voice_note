@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -12,21 +13,14 @@ import {
   View,
 } from "react-native";
 import AudioCard from "./components/AudioCard";
+import DeleteNoteModal from "./components/DeleteNoteModal";
 import RecordButton from "./components/RecordButton";
+import RenameNoteModal from "./components/RenameNoteModal";
 import { AudioNote } from "./types/audioNote";
-
-const audioNotes: AudioNote[] = [
-  { id: "1", title: "Morning Thoughts", duration: "01:24", date: "Today", isPlaying: false },
-  { id: "2", title: "Meeting Notes", duration: "03:10", date: "Yesterday", isPlaying: true },
-  { id: "3", title: "Daily Reflection", duration: "02:45", date: "Jan 12", isPlaying: false },
-  { id: "4", title: "Ideas & Brainstorm", duration: "04:02", date: "Jan 10", isPlaying: false },
-  { id: "5", title: "Project Planning", duration: "05:18", date: "Jan 8", isPlaying: false },
-  { id: "6", title: "Creative Writing", duration: "02:30", date: "Jan 5", isPlaying: false },
-];
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [notes, setNotes] = useState<AudioNote[]>(audioNotes);
+  const [notes, setNotes] = useState<AudioNote[]>([]);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -171,10 +165,26 @@ export default function Index() {
     }
   };
 
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [renameNoteId, setRenameNoteId] = useState<string | null>(null);
+  const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
+
   const handleMenuPress = (noteId: string) => {
-    // Handle menu actions here
-    console.log("Menu pressed for note:", noteId);
-    // You can show a modal or action sheet
+    setSelectedNoteId(noteId);
+  };
+
+  const handleRename = (id: string, newName: string) => {
+    setNotes(notes.map(n => n.id === id ? { ...n, title: newName } : n));
+    setRenameNoteId(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    // Optionally remove the file physically:
+    // const note = notes.find(n => n.id === id);
+    // if (note?.uri) await FileSystem.deleteAsync(note.uri, { idempotent: true });
+
+    setNotes(notes.filter(n => n.id !== id));
+    setDeleteNoteId(null);
   };
 
   const filteredNotes = notes.filter(note =>
@@ -227,8 +237,11 @@ export default function Index() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No recordings yet</Text>
+          }
           ListHeaderComponent={
-            <Text style={styles.sectionTitle}>Recent Recordings</Text>
+            notes.length > 0 ? <Text style={styles.sectionTitle}>Recent Recordings</Text> : null
           }
           renderItem={({ item }) => (
             <AudioCard
@@ -244,6 +257,50 @@ export default function Index() {
           onPress={handleRecordPress}
           isRecording={!!recording}
           pulseAnim={pulseAnim}
+        />
+
+        {/* Options Menu Modal */}
+        <Modal
+          visible={!!selectedNoteId}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSelectedNoteId(null)}
+        >
+          <TouchableOpacity style={styles.menuOverlay} onPress={() => setSelectedNoteId(null)} activeOpacity={1}>
+            <View style={styles.menuContainer}>
+              <TouchableOpacity style={styles.menuItem} onPress={() => {
+                setRenameNoteId(selectedNoteId);
+                setSelectedNoteId(null);
+              }}>
+                <Ionicons name="pencil-outline" size={20} color="#fff" />
+                <Text style={styles.menuItemText}>Rename</Text>
+              </TouchableOpacity>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity style={styles.menuItem} onPress={() => {
+                setDeleteNoteId(selectedNoteId);
+                setSelectedNoteId(null);
+              }}>
+                <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                <Text style={[styles.menuItemText, { color: '#FF3B30' }]}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* Rename Modal */}
+        <RenameNoteModal
+          visible={!!renameNoteId}
+          initialName={notes.find(n => n.id === renameNoteId)?.title || ""}
+          onClose={() => setRenameNoteId(null)}
+          onConfirm={(newName) => renameNoteId && handleRename(renameNoteId, newName)}
+        />
+
+        {/* Delete Modal */}
+        <DeleteNoteModal
+          visible={!!deleteNoteId}
+          noteTitle={notes.find(n => n.id === deleteNoteId)?.title || ""}
+          onClose={() => setDeleteNoteId(null)}
+          onConfirm={() => deleteNoteId && handleDelete(deleteNoteId)}
         />
       </LinearGradient>
     </View>
@@ -334,7 +391,40 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginTop: 8,
   },
+  emptyText: {
+    color: "#8A9BCC",
+    textAlign: "center",
+    marginTop: 40,
+    fontSize: 16,
+  },
   list: {
     paddingBottom: 160,
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  menuContainer: {
+    backgroundColor: '#1E3C8A',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  menuItemText: {
+    color: '#fff',
+    fontSize: 18,
+    marginLeft: 16,
+    fontWeight: '500',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
 });
